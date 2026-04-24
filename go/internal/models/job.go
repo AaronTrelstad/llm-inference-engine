@@ -22,8 +22,6 @@ type InferenceJob struct {
 	Prompt  string `json:"prompt"`
 	ModelID string `json:"model_id"`
 
-	// KV Cache
-
 	Status      JobStatus `json:"status"`
 	CreatedAt   time.Time `json:"created_at"`
 	ScheduledAt time.Time `json:"scheduled_at"`

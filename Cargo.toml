@@ -2,5 +2,5 @@
 members = [
     "rust/transformer",
     "rust/kvcache",
-    "rust/objectstore",
+    "rust/objectstore", "rust/db",
 ]
