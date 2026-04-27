@@ -1,0 +1,74 @@
+syntax = "proto3";
+package db;
+
+message Empty {}
+
+message JobRequest {
+    string job_id            = 1;
+    string status            = 2;
+    string prompt            = 3;
+    string output            = 4;
+    string prefill_worker_id = 5;
+    string decode_worker_id  = 6;
+    uint64 latency           = 7;
+    uint64 timestamp         = 8;
+}
+
+message MetricRequest {
+    string worker_id      = 1;
+    float  gpu_memory     = 2;
+    float  gpu_util       = 3;
+    uint32 active_jobs    = 4;
+    uint32 tokens_per_sec = 5;
+    uint64 timestamp      = 6;
+}
+
+message GetJobRequest {
+    string job_id = 1;
+}
+
+message JobResponse {
+    bool       found = 1;
+    JobRequest job   = 2;
+}
+
+message JobFilterRequest {
+    string status     = 1;
+    string worker_id  = 2;
+    uint64 time_start = 3;
+    uint64 time_end   = 4;
+    bool   aggregate  = 5;
+}
+
+message JobAggregateResponse {
+    double avg_latency = 1;
+    double p99_latency = 2;
+    uint64 max_latency = 3;
+    uint64 min_latency = 4;
+    uint64 total_count = 5;
+}
+
+message JobQueryResponse {
+    bool                 is_aggregate = 1;
+    repeated JobRequest  jobs         = 2;
+    JobAggregateResponse aggregate    = 3;
+}
+
+message MetricFilterRequest {
+    string worker_id   = 1;
+    uint64 time_start  = 2;
+    uint64 time_end    = 3;
+    string aggregation = 4;
+}
+
+message MetricQueryResponse {
+    repeated MetricRequest metrics = 1;
+}
+
+service DBService {
+    rpc InsertJob     (JobRequest)          returns (Empty);
+    rpc InsertMetric  (MetricRequest)       returns (Empty);
+    rpc GetJob        (GetJobRequest)       returns (JobResponse);
+    rpc QueryJobs     (JobFilterRequest)    returns (JobQueryResponse);
+    rpc QueryMetrics  (MetricFilterRequest) returns (MetricQueryResponse);
+}

@@ -4,10 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bincode          = "1"
-serde            = { version = "1", features = ["derive"] }
-crossbeam-epoch  = "0.9"
-crossbeam-utils  = "0.8"
-rand             = "0.10"
-siphasher        = "1.0"
+bincode         = "1"
+serde           = { version = "1", features = ["derive"] }
+crossbeam-epoch = "0.9"
+crossbeam-utils = "0.8"
+rand            = "0.10"
+siphasher       = "1.0"
+tonic           = "0.14.5"
+tonic-prost     = "0.14.5"  
+prost           = "0.14"
+tokio           = { version = "1", features = ["full"] }
+async-trait     = "0.1"
 
+[build-dependencies]
+tonic-prost-build = "0.14.5"

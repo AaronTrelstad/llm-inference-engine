@@ -1,7 +1,6 @@
 use std::fs::{File, OpenOptions};
 use std::path::PathBuf;
 use std::io::{Read, Result, Seek, SeekFrom, Write};
-use std::cmp;
 
 pub struct WAL {
     file: File,

@@ -25,7 +25,7 @@ impl SSTable {
         let mut index = BTreeMap::new();
         let mut bloom_filter = BloomFilter::new(1_000_000, 0.01);
 
-        let mut index_offset = 0;
+        let index_offset;
     
         {
             let mut writer = std::io::BufWriter::new(&file);        
@@ -46,7 +46,7 @@ impl SSTable {
                 offset += 8 + key.len() as u64 + 8 + value.len() as u64;
             }
 
-            let index_offset = offset;
+            index_offset = offset;
             let index_bytes = bincode::serialize(&index)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
             writer.write_all(&(index_bytes.len() as u64).to_le_bytes())?;
