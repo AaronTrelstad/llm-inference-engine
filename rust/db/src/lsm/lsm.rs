@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use crate::lsm::compaction::Compaction;
 use crate::wal::wal::{WAL, WALRecordType, WALRecord};
 use super::memtable::MemTable;
 use super::sstable::SSTable;
@@ -12,12 +13,14 @@ pub struct LSMTree {
 }
 
 impl LSMTree {
+    const COMPACTION_THRESHOLD: usize = 4; 
+
     pub fn get(&mut self, key: &[u8]) -> Result<Option<Vec<u8>>> {
         if let Some(value) = self.memtable.get(key) {
             return Ok(Some(value));
         }
 
-        for table in self.sstables.iter_mut().rev() {
+        for table in self.sstables.iter_mut() {
             if let Some(value) = table.get(key)? {
                 return Ok(Some(value));
             }
@@ -89,7 +92,17 @@ impl LSMTree {
         let new_sstable = SSTable::write(path, &self.memtable)?;
         self.sstables.insert(0, new_sstable);  
         self.memtable = MemTable::new();       
-        self.wal.truncate()?;                 
+        self.wal.truncate()?;  
+
+        if self.should_compact() {
+            let compaction = Compaction::new();
+            let old = std::mem::take(&mut self.sstables);
+            self.sstables = compaction.compact(old, &self.data_dir)?;
+        }               
         Ok(())
+    }
+
+    fn should_compact(&self) -> bool {
+        self.sstables.len() >= Self::COMPACTION_THRESHOLD
     }
 }

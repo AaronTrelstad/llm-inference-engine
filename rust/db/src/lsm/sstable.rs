@@ -7,10 +7,11 @@ use super::bloom::BloomFilter;
 use super::memtable::MemTable;
 
 pub struct SSTable {
-    path: PathBuf,
+    pub path: PathBuf,
     file: File,
     index: BTreeMap<Vec<u8>, u64>,
     bloom_filter: BloomFilter,
+    index_offset: u64,
 }
 
 impl SSTable {
@@ -23,6 +24,8 @@ impl SSTable {
 
         let mut index = BTreeMap::new();
         let mut bloom_filter = BloomFilter::new(1_000_000, 0.01);
+
+        let mut index_offset = 0;
     
         {
             let mut writer = std::io::BufWriter::new(&file);        
@@ -68,6 +71,7 @@ impl SSTable {
             file,
             index,
             bloom_filter,
+            index_offset
         })
     }
 
@@ -106,6 +110,7 @@ impl SSTable {
             file,
             index,
             bloom_filter,
+            index_offset
         })
     }
 
@@ -133,6 +138,37 @@ impl SSTable {
         self.file.read_exact(&mut value)?;
     
         Ok(Some(value))
+    }
+
+    pub fn iter(&mut self) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        self.file.seek(SeekFrom::Start(0))?;
+        let mut records = Vec::new();
+    
+        loop {
+            if self.file.stream_position()? >= self.index_offset {
+                break;
+            }
+
+            let mut len_buf = [0u8; 8];
+            match self.file.read_exact(&mut len_buf) {
+                Ok(_) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(e) => return Err(e),
+            }
+            let key_len = u64::from_le_bytes(len_buf) as usize;
+            let mut key = vec![0u8; key_len];
+            self.file.read_exact(&mut key)?;
+    
+            let mut val_len_buf = [0u8; 8];
+            self.file.read_exact(&mut val_len_buf)?;
+            let val_len = u64::from_le_bytes(val_len_buf) as usize;
+            let mut value = vec![0u8; val_len];
+            self.file.read_exact(&mut value)?;
+    
+            records.push((key, value));
+        }
+    
+        Ok(records)
     }
 }
 
