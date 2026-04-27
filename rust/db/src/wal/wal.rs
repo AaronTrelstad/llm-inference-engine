@@ -10,8 +10,8 @@ pub struct WAL {
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub enum WALRecordType {
-    Job,
-    GpuMetric,
+    InferenceJob,
+    GPUMetric,
     ChatMessages
 }
 

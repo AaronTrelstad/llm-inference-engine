@@ -2,20 +2,6 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use crate::skiplist::skiplist::SkipList;
 use std::io::Result;
 
-pub enum RecordType {
-    InferenceJob = 1,
-    GPUMetrics = 2,
-    ChatMessages = 3
-}
-
-pub fn encode_key(record_type: RecordType, timestamp: u64, id: &str) -> Vec<u8> {
-    let mut key = Vec::with_capacity(1 + 8 + id.len());
-    key.push(record_type as u8);                    
-    key.extend_from_slice(&timestamp.to_be_bytes()); 
-    key.extend_from_slice(id.as_bytes());            
-    key
-}
-
 const MAX_SIZE: usize = 4 * 1024 * 1024;
 
 pub struct MemTable {

@@ -19,11 +19,11 @@ impl Compaction {
         Self {
             retention_policies: vec![
                 RetentionPolicy {
-                    record_type: WALRecordType::GpuMetric,
+                    record_type: WALRecordType::GPUMetric,
                     ttl_seconds: Some(7 * 24 * 3600), 
                 },
                 RetentionPolicy {
-                    record_type: WALRecordType::Job,
+                    record_type: WALRecordType::InferenceJob,
                     ttl_seconds: Some(7 * 24 * 3600),                 
                 },
                 RetentionPolicy {
@@ -60,8 +60,8 @@ impl Compaction {
                 }
     
                 let record_type = match key[0] {
-                    0 => WALRecordType::Job,
-                    1 => WALRecordType::GpuMetric,
+                    0 => WALRecordType::InferenceJob,
+                    1 => WALRecordType::GPUMetric,
                     2 => WALRecordType::ChatMessages,
                     _ => return false,  
                 };
