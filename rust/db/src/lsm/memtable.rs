@@ -1,5 +1,6 @@
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use crate::skiplist::skiplist::SkipList;
+use std::io::Result;
 
 pub enum RecordType {
     InferenceJob = 1,
@@ -17,13 +18,13 @@ pub fn encode_key(record_type: RecordType, timestamp: u64, id: &str) -> Vec<u8> 
 
 const MAX_SIZE: usize = 4 * 1024 * 1024;
 
-pub struct Memtable {
+pub struct MemTable {
     data: SkipList,
     size: AtomicUsize,
     frozen: AtomicBool
 }
 
-impl Memtable {
+impl MemTable {
     pub fn new() -> Self {
         Self {
             data: SkipList::new(),
@@ -36,9 +37,12 @@ impl Memtable {
         self.data.get(key)
     }
 
-    pub fn insert(&self, key: Vec<u8>, value: Vec<u8>) -> Result<(), &'static str> {
+    pub fn insert(&self, key: Vec<u8>, value: Vec<u8>) -> Result<()> {
         if self.frozen.load(Ordering::Acquire) {
-            return Err("memtable is frozen");
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "memtable is frozen"
+            ));
         }
 
         let entry_size = key.len() + value.len();

@@ -4,7 +4,7 @@ use std::io::{Result, Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
 use super::bloom::BloomFilter;
-use super::memtable::Memtable;
+use super::memtable::MemTable;
 
 pub struct SSTable {
     path: PathBuf,
@@ -14,7 +14,7 @@ pub struct SSTable {
 }
 
 impl SSTable {
-    pub fn write(path: PathBuf, memtable: &Memtable) -> Result<Self> {
+    pub fn write(path: PathBuf, memtable: &MemTable) -> Result<Self> {
         let file = OpenOptions::new()
             .create(true)
             .write(true)

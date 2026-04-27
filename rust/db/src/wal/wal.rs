@@ -3,27 +3,28 @@ use std::path::PathBuf;
 use std::io::{Read, Result, Seek, SeekFrom, Write};
 use std::cmp;
 
-pub struct Wal {
+pub struct WAL {
     file: File,
     sequence: u64
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub enum WalRecordType {
+pub enum WALRecordType {
     Job,
     GpuMetric,
     ChatMessages
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub struct WalRecord {
+pub struct WALRecord {
     pub sequence: u64,
     pub timestamp: u64,
-    pub record_type: WalRecordType,
-    pub payload: Vec<u8>
+    pub record_type: WALRecordType,
+    pub key: Vec<u8>,
+    pub value: Vec<u8>
 }
 
-impl Wal {
+impl WAL {
     pub fn open(path: PathBuf) -> Result<Self> {
         let file = OpenOptions::new()
             .create(true)
@@ -36,13 +37,14 @@ impl Wal {
         Ok(wal)
     }
 
-    pub fn append(&mut self, record: &WalRecord) -> Result<()> {
+    pub fn append(&mut self, record: &WALRecord) -> Result<()> {
         self.sequence += 1;
-        let record = WalRecord {
+        let record = WALRecord {
             sequence:    self.sequence,
             timestamp:   record.timestamp,
             record_type: record.record_type.clone(), 
-            payload:     record.payload.clone(),
+            key:         record.key.clone(),
+            value:       record.value.clone(),
         };
 
         let bytes = bincode::serialize(&record)
@@ -55,7 +57,7 @@ impl Wal {
         Ok(())
     }
 
-    pub fn recover(&mut self) -> Result<Vec<WalRecord>> {
+    pub fn recover(&mut self) -> Result<Vec<WALRecord>> {
         self.file.seek(SeekFrom::Start(0))?;
         let mut records = Vec::new();
 
@@ -76,10 +78,10 @@ impl Wal {
                 Err(e) => return Err(e),
             }
 
-            let record: WalRecord = bincode::deserialize(&buf)
+            let record: WALRecord = bincode::deserialize(&buf)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
-            self.sequence = cmp::max(record.sequence, self.sequence);
+            self.sequence = self.sequence.max(record.sequence);
             records.push(record);
         }
 
