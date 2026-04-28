@@ -5,7 +5,8 @@ use tempfile::tempdir;
 #[test]
 fn test_lsm_put_and_get() {
     let dir = tempdir().unwrap();
-    let mut lsm = LSMTree::open(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut lsm = LSMTree::open(&path).unwrap();
 
     lsm.put(b"key".to_vec(), b"value".to_vec(), WALRecordType::InferenceJob)
         .unwrap();
@@ -16,14 +17,16 @@ fn test_lsm_put_and_get() {
 #[test]
 fn test_lsm_get_missing_returns_none() {
     let dir = tempdir().unwrap();
-    let mut lsm = LSMTree::open(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut lsm = LSMTree::open(&path).unwrap();
     assert_eq!(lsm.get(b"missing").unwrap(), None);
 }
 
 #[test]
 fn test_lsm_multiple_record_types() {
     let dir = tempdir().unwrap();
-    let mut lsm = LSMTree::open(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut lsm = LSMTree::open(&path).unwrap();
 
     lsm.put(b"job-1".to_vec(), b"job-data".to_vec(), WALRecordType::InferenceJob)
         .unwrap();
@@ -37,9 +40,10 @@ fn test_lsm_multiple_record_types() {
 #[test]
 fn test_lsm_wal_recovery_after_reopen() {
     let dir = tempdir().unwrap();
+    let path = dir.path().to_path_buf();
 
     {
-        let mut lsm = LSMTree::open(&dir.path().to_path_buf()).unwrap();
+        let mut lsm = LSMTree::open(&path).unwrap();
         lsm.put(b"persistent".to_vec(), b"data".to_vec(), WALRecordType::InferenceJob)
             .unwrap();
         lsm.put(b"also".to_vec(), b"kept".to_vec(), WALRecordType::GPUMetric)
@@ -47,7 +51,7 @@ fn test_lsm_wal_recovery_after_reopen() {
     }
 
     // Reopen — WAL recovery should restore memtable
-    let mut lsm2 = LSMTree::open(&dir.path().to_path_buf()).unwrap();
+    let mut lsm2 = LSMTree::open(&path).unwrap();
     assert_eq!(lsm2.get(b"persistent").unwrap(), Some(b"data".to_vec()));
     assert_eq!(lsm2.get(b"also").unwrap(), Some(b"kept".to_vec()));
 }
@@ -55,7 +59,8 @@ fn test_lsm_wal_recovery_after_reopen() {
 #[test]
 fn test_lsm_many_writes_all_readable() {
     let dir = tempdir().unwrap();
-    let mut lsm = LSMTree::open(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut lsm = LSMTree::open(&path).unwrap();
 
     for i in 0u32..500 {
         let key = format!("key_{:06}", i).into_bytes();
@@ -77,7 +82,8 @@ fn test_lsm_overwrite_latest_value_wins() {
     // memtable the first write wins (skiplist drops duplicates). This test
     // documents current behavior.
     let dir = tempdir().unwrap();
-    let mut lsm = LSMTree::open(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut lsm = LSMTree::open(&path).unwrap();
 
     lsm.put(b"k".to_vec(), b"first".to_vec(), WALRecordType::InferenceJob)
         .unwrap();

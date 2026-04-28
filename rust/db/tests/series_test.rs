@@ -32,7 +32,8 @@ fn make_metric(worker_id: &str, timestamp: u64, gpu_memory: f32) -> MetricRecord
 #[test]
 fn test_insert_and_get_job() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     let job = make_job("job_001", "done", 1000);
     series.insert_job(job).unwrap();
@@ -48,7 +49,8 @@ fn test_insert_and_get_job() {
 #[test]
 fn test_get_missing_job() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     let result = series.get_job("nonexistent").unwrap();
     assert!(result.is_none());
@@ -59,7 +61,8 @@ fn test_get_missing_job() {
 #[test]
 fn test_query_jobs_time_range() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     series.insert_job(make_job("job_001", "done",       1000)).unwrap();
     series.insert_job(make_job("job_002", "done",       2000)).unwrap();
@@ -86,7 +89,8 @@ fn test_query_jobs_time_range() {
 #[test]
 fn test_query_jobs_filter_by_status() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     series.insert_job(make_job("job_001", "done",       1000)).unwrap();
     series.insert_job(make_job("job_002", "failed",     2000)).unwrap();
@@ -112,7 +116,8 @@ fn test_query_jobs_filter_by_status() {
 #[test]
 fn test_query_jobs_filter_by_worker_id() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     let mut job1 = make_job("job_001", "done", 1000);
     job1.prefill_worker_id = Some("worker_A".to_string());
@@ -146,7 +151,8 @@ fn test_query_jobs_filter_by_worker_id() {
 #[test]
 fn test_query_jobs_aggregation() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     let mut job1 = make_job("job_001", "done", 1000); job1.latency = 100;
     let mut job2 = make_job("job_002", "done", 2000); job2.latency = 200;
@@ -177,7 +183,8 @@ fn test_query_jobs_aggregation() {
 #[test]
 fn test_query_jobs_count_by_status() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     series.insert_job(make_job("j1", "done",   1000)).unwrap();
     series.insert_job(make_job("j2", "done",   2000)).unwrap();
@@ -204,7 +211,8 @@ fn test_query_jobs_count_by_status() {
 #[test]
 fn test_insert_and_query_metrics() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     for i in 0..5u64 {
         series.insert_metrics(MetricRecord {
@@ -230,7 +238,8 @@ fn test_insert_and_query_metrics() {
 #[test]
 fn test_query_metrics_filter_by_worker_id() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     series.insert_metrics(make_metric("worker_A", 1000, 40.0)).unwrap();
     series.insert_metrics(make_metric("worker_B", 2000, 60.0)).unwrap();
@@ -249,7 +258,8 @@ fn test_query_metrics_filter_by_worker_id() {
 #[test]
 fn test_metrics_aggregation_avg() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     for i in 0..4u64 {
         series.insert_metrics(MetricRecord {
@@ -275,7 +285,8 @@ fn test_metrics_aggregation_avg() {
 #[test]
 fn test_metrics_aggregation_max() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     series.insert_metrics(make_metric("w", 1000, 20.0)).unwrap();
     series.insert_metrics(make_metric("w", 2000, 80.0)).unwrap();
@@ -294,7 +305,8 @@ fn test_metrics_aggregation_max() {
 #[test]
 fn test_metrics_aggregation_min() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     series.insert_metrics(make_metric("w", 1000, 20.0)).unwrap();
     series.insert_metrics(make_metric("w", 2000, 80.0)).unwrap();
@@ -315,11 +327,16 @@ fn test_metrics_aggregation_min() {
 #[test]
 fn test_e2e_insert_query_jobs_and_metrics() {
     let dir = tempdir().unwrap();
-    let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+    let path = dir.path().to_path_buf();
+    let mut series = Series::new(&path).unwrap();
 
     // Insert 10 jobs with alternating statuses
     for i in 1..=10u64 {
-        let mut job = make_job(&format!("job_{:03}", i), if i % 2 == 0 { "done" } else { "failed" }, i * 1000);
+        let mut job = make_job(
+            &format!("job_{:03}", i),
+            if i % 2 == 0 { "done" } else { "failed" },
+            i * 1000,
+        );
         job.latency = i * 50;
         series.insert_job(job).unwrap();
     }
@@ -371,14 +388,14 @@ fn test_e2e_insert_query_jobs_and_metrics() {
     }).unwrap();
     assert_eq!(metrics.len(), 5);
 
-    // Max aggregation across all workers
+    // Max aggregation across all workers — worker_A peaks at 5*10=50.0
     let result = series.query_metrics(MetricFilter {
         worker_id:   None,
         time_range:  None,
         aggregation: Some(GPUAggregation::Max),
     }).unwrap();
     assert_eq!(result.len(), 1);
-    assert!((result[0].gpu_memory - 50.0).abs() < 0.1); // max of worker_A = 5*10=50
+    assert!((result[0].gpu_memory - 50.0).abs() < 0.1);
 }
 
 // ── WAL recovery (raw LSM level) ──────────────────────────────────────────────
@@ -391,9 +408,10 @@ fn test_wal_recovery_restores_raw_lsm_data() {
     // restart, get_job returns None even though the data is in the WAL.
     // This test verifies the WAL data is intact at the raw level.
     let dir = tempdir().unwrap();
+    let path = dir.path().to_path_buf();
 
     {
-        let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+        let mut series = Series::new(&path).unwrap();
         series.insert_job(make_job("job_001", "done", 1000)).unwrap();
         series.insert_job(make_job("job_002", "done", 2000)).unwrap();
     }
@@ -414,9 +432,10 @@ fn test_wal_recovery_restores_raw_lsm_data() {
 #[test]
 fn test_persistence_across_restart() {
     let dir = tempdir().unwrap();
+    let path = dir.path().to_path_buf();
 
     {
-        let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+        let mut series = Series::new(&path).unwrap();
         series.insert_job(make_job("job_001", "done", 1000)).unwrap();
         series.insert_job(make_job("job_002", "done", 2000)).unwrap();
     }
@@ -435,7 +454,7 @@ fn test_persistence_across_restart() {
     // job_timestamps index (needed by get_job) is NOT restored. get_job
     // returns None until bug #2 (BTree/index persistence) is fixed.
     {
-        let mut series = Series::new(&dir.path().to_path_buf()).unwrap();
+        let mut series = Series::new(&path).unwrap();
         let job = series.get_job("job_001").unwrap();
         // Expected: None — job_timestamps is empty after restart (bug #2)
         assert!(
