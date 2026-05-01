@@ -1,5 +1,63 @@
 syntax = "proto3";
-
 package inference;
-option go_package = "github.com/youruser/llm-inference-engine/go/scheduler/internal/client";
 
+message Empty {}
+
+message KVBlock {
+    uint32 layer_idx       = 1;
+    bytes  k_data          = 2;   
+    bytes  v_data          = 3;  
+    repeated uint32 k_shape = 4;
+    repeated uint32 v_shape = 5;
+    string dtype           = 6;  
+}
+
+message PrefillRequest {
+    string job_id          = 1;
+    string prompt          = 2;
+    uint32 max_tokens      = 3;
+    string decode_worker_addr = 4;  
+}
+
+message PrefillResponse {
+    string job_id          = 1;
+    uint32 first_token     = 2;
+    uint32 n_tokens        = 3;   
+    string prefill_worker  = 4;
+    bool   ok              = 5;
+    string error           = 6;
+}
+
+service PrefillService {
+    rpc Prefill (PrefillRequest) returns (PrefillResponse);
+    rpc Health  (Empty)          returns (HealthResponse);
+}
+
+message DecodeRequest {
+    string job_id          = 1;
+    uint32 first_token     = 2;
+    uint32 n_prompt_tokens = 3;
+    uint32 max_tokens      = 4;
+    repeated KVBlock kv_blocks = 5; 
+}
+
+message DecodeResponse {
+    string job_id          = 1;
+    string output          = 2;
+    uint32 n_tokens        = 3;
+    string decode_worker   = 4;
+    bool   ok              = 5;
+    string error           = 6;
+}
+
+message HealthResponse {
+    bool   ok              = 1;
+    string worker_id       = 2;
+    float  gpu_util        = 3;
+    uint32 active_jobs     = 4;
+}
+
+service DecodeService {
+    rpc Decode  (DecodeRequest)  returns (DecodeResponse);
+    rpc Health  (Empty)          returns (HealthResponse);
+}

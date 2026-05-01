@@ -2301,14 +2301,20 @@ name = "transformer"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "bytemuck",
  "candle-core",
  "candle-nn",
  "memmap2",
+ "prost",
  "safetensors 0.4.5",
  "serde",
  "serde_json",
  "tokenizers 0.19.1",
+ "tokio",
+ "tonic",
+ "tonic-prost",
+ "tonic-prost-build",
 ]
 
 [[package]]
